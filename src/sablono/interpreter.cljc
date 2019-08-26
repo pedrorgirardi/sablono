@@ -67,6 +67,33 @@
            (React/createElement element (.-state this))))
        ctor)))
 
+#?(:cljs
+   (defn wrap-form-element2 [element _]
+     (let [ctor (fn [props]
+                  (this-as this
+                    (set! (.-state this)
+                          (let [state #js {}]
+                            (->> #js {:onChange (goog.bind (object/get this "onChange") this)}
+                                 (object/extend state props))
+                            state))
+
+                    (.call React/Component this props)))]
+
+       (set! (.-displayName ctor) (str "wrapped-" element))
+
+       (goog.inherits ctor React/Component)
+
+       (specify! (.-prototype ctor)
+         Object
+
+         (onChange [^js this event]
+           (when-let [handler (.-onChange (.-props this))]
+             (handler event)))
+
+         (render [this]
+           (React/createElement element (.-state this))))
+       ctor)))
+
 #?(:cljs (def wrapped-input))
 #?(:cljs (def wrapped-checked))
 #?(:cljs (def wrapped-select))
@@ -74,10 +101,10 @@
 
 #?(:cljs (defn lazy-load-wrappers []
            (when-not wrapped-textarea
-             (set! wrapped-input (wrap-form-element "input" "value"))
-             (set! wrapped-checked (wrap-form-element "input" "checked"))
-             (set! wrapped-select (wrap-form-element "select" "value"))
-             (set! wrapped-textarea (wrap-form-element "textarea" "value")))))
+             (set! wrapped-input (wrap-form-element2 "input" "value"))
+             (set! wrapped-checked (wrap-form-element2 "input" "checked"))
+             (set! wrapped-select (wrap-form-element2 "select" "value"))
+             (set! wrapped-textarea (wrap-form-element2 "textarea" "value")))))
 
 (defn ^boolean controlled-input?
   "Returns true if `type` and `props` are used a controlled input,

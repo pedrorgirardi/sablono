@@ -148,7 +148,7 @@
             :children children
             :react-key nil
             :tag type})
-     :cljs (apply React/createElement (element-class type props) props children)))
+     :cljs (apply React/createElement type props children)))
 
 (defn attributes [attrs]
   #?(:clj (-> (util/html-to-dom-attrs attrs)
